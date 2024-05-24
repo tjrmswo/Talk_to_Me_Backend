@@ -8,11 +8,14 @@ import {
   Patch,
   HttpCode,
   HttpStatus,
+  HttpException,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { LoginUserDto } from './dto/login-user.dto';
+import { SocialUserCreateDto } from './dto/social-create-user.dto';
+import { SocialUserLoginDTO } from './dto/social-login-user.dto';
 
 @Controller('user')
 export class UserController {
@@ -38,6 +41,62 @@ export class UserController {
   @Post('/login')
   login(@Body() loginUserDto: LoginUserDto) {
     return this.userService.login(loginUserDto);
+  }
+  @Post('/socialSignup')
+  async socialUserCreate(@Body() socialLoginUserDto: SocialUserCreateDto) {
+    const signUp = await this.userService.socialUserCreate(socialLoginUserDto);
+    if (signUp) {
+      throw new HttpException(
+        {
+          data: signUp,
+          status: HttpStatus.OK,
+          statusText: 'OK',
+        },
+        HttpStatus.OK,
+      );
+    } else {
+      throw new HttpException(
+        {
+          status: HttpStatus.BAD_REQUEST,
+          error: 'User not found',
+        },
+        HttpStatus.BAD_REQUEST,
+        {
+          cause: Error,
+        },
+      );
+    }
+    return this.userService.socialUserCreate(socialLoginUserDto);
+  }
+
+  @Post('/socialLogin')
+  async socialUserLogin(@Body() id: SocialUserLoginDTO) {
+    console.log(
+      'socialLogin: ',
+      await this.userService.socialUserLogin(id.kakao_id),
+    );
+    const loginStatus = await this.userService.socialUserLogin(id.kakao_id);
+    if (loginStatus) {
+      throw new HttpException(
+        {
+          data: loginStatus,
+          status: HttpStatus.OK,
+          statusText: 'OK',
+        },
+        HttpStatus.OK,
+      );
+    } else {
+      throw new HttpException(
+        {
+          status: HttpStatus.BAD_REQUEST,
+          error: 'User not found',
+        },
+        HttpStatus.BAD_REQUEST,
+        {
+          cause: Error,
+        },
+      );
+    }
   }
 
   @Delete(':email')
